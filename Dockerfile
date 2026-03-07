@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install dependencies first (layer-cached until package files change)
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN npm install -g npm@11 && npm ci --ignore-scripts
 
 # Copy source and build
 COPY public/ ./public/
