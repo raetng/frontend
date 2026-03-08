@@ -15,6 +15,9 @@ RUN npm run build
 # Stage 2: Serve
 FROM nginx:1.27-alpine AS runtime
 
+# Patch Alpine OS-level vulnerabilities
+RUN apk update && apk upgrade --no-cache
+
 # Remove default nginx static assets
 RUN rm -rf /usr/share/nginx/html/*
 
