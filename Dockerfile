@@ -21,6 +21,9 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy compiled output from builder
 COPY --from=builder /app/build /usr/share/nginx/html
 
+# Copy custom nginx config (reverse proxy to backend services)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # nginx listens on 80 by default
 EXPOSE 80
 
