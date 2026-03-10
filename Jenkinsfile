@@ -42,6 +42,11 @@ pipeline {
                             git config user.name "Jenkins CI"
                             git add VERSION
                             git commit -m "chore: bump VERSION to ${version}"
+                            REMOTE_URL=\$(git remote get-url origin)
+                            if echo "\$REMOTE_URL" | grep -q "https://"; then
+                                SSH_URL=\$(echo "\$REMOTE_URL" | sed 's|https://github.com/|git@github.com:|')
+                                git remote set-url origin "\$SSH_URL"
+                            fi
                             git push origin HEAD:${env.GIT_BRANCH_NAME}
                         """
                         env.GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
