@@ -133,6 +133,23 @@ pipeline {
             }
         }
 
+        stage('Verify Monitoring') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch pattern: 'release/*', comparator: 'GLOB'
+                }
+            }
+            steps {
+                script {
+                    prometheusVerify(
+                        serviceName: 'frontend',
+                        namespace: env.DEPLOY_NAMESPACE
+                    )
+                }
+            }
+        }
+
         stage('Deploy to Prod') {
             when {
                 branch 'main'
