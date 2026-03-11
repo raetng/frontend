@@ -26,36 +26,6 @@ pipeline {
             }
         }
 
-        stage('Prepare Release') {
-            when {
-                branch pattern: 'release/*', comparator: 'GLOB'
-            }
-            steps {
-                script {
-                    def version = env.GIT_BRANCH_NAME.replaceFirst(/^release\//, '')
-                    def currentVersion = fileExists('VERSION') ? readFile('VERSION').trim() : ''
-                    if (currentVersion != version) {
-                        echo "Updating VERSION from '${currentVersion}' to '${version}'"
-                        writeFile file: 'VERSION', text: version
-                        sh """
-                            git config user.email "jenkins@localhost"
-                            git config user.name "Jenkins CI"
-                            git add VERSION
-                            git commit -m "chore: bump VERSION to ${version}"
-                            REMOTE_URL=\$(git remote get-url origin)
-                            if echo "\$REMOTE_URL" | grep -q "https://"; then
-                                SSH_URL=\$(echo "\$REMOTE_URL" | sed 's|https://github.com/|git@github.com:|')
-                                git remote set-url origin "\$SSH_URL"
-                            fi
-                            git push origin HEAD:${env.GIT_BRANCH_NAME}
-                        """
-                        env.GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                        env.IMAGE_TAG = "rc-${env.GIT_COMMIT_SHORT}"
-                    }
-                }
-            }
-        }
-
         stage('Build') {
             steps {
                 sh 'npm ci'
@@ -166,6 +136,23 @@ pipeline {
                     prometheusVerify(
                         serviceName: 'frontend',
                         namespace: 'staging'
+                    )
+                }
+            }
+        }
+
+        stage('Verify Monitoring') {
+            when {
+                anyOf {
+                    branch 'develop'
+                    branch pattern: 'release/*', comparator: 'GLOB'
+                }
+            }
+            steps {
+                script {
+                    prometheusVerify(
+                        serviceName: 'frontend',
+                        namespace: env.DEPLOY_NAMESPACE
                     )
                 }
             }
