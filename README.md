@@ -40,3 +40,4 @@ npm run build    # outputs to build/
 - axios for HTTP requests
 final testing
 testing
+test
